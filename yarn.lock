@@ -7070,6 +7070,11 @@ react-is@^17.0.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
+react-native-checkbox-reanimated@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/react-native-checkbox-reanimated/-/react-native-checkbox-reanimated-0.1.1.tgz#7d13bb42734cc73a66938e133fb39249e0b41e0a"
+  integrity sha512-LvSFBJxGqEOrNAKtypdtFCxWCLaZ6K/0ZKz8WFj0OEuyhHTwwy/ASyfOzN2JibADsTfVQiQgrIzpyjvqCLfR3w==
+
 react-native-codegen@^0.70.5:
   version "0.70.5"
   resolved "https://registry.npmjs.org/react-native-codegen/-/react-native-codegen-0.70.5.tgz"
@@ -7137,7 +7142,7 @@ react-native-screens@^3.18.2:
 
 react-native-svg@^13.4.0:
   version "13.4.0"
-  resolved "https://registry.npmjs.org/react-native-svg/-/react-native-svg-13.4.0.tgz"
+  resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-13.4.0.tgz#82399ba0956c454144618aa581e2d748dd3f010a"
   integrity sha512-B3TwK+H0+JuRhYPzF21AgqMt4fjhCwDZ9QUtwNstT5XcslJBXC0FoTkdZo8IEb1Sv4suSqhZwlAY6lwOv3tHag==
   dependencies:
     css-select "^5.1.0"

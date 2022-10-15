@@ -1,12 +1,12 @@
 import React from 'react'
 import { Text } from 'react-native'
 import AppContainer from './components/AppContaier'
-import MainScreen from './screens/MainScreen'
+import HomeScreen from './screens/HomeScreen'
 
 const App = () => {
   return (
     <AppContainer>
-      <MainScreen />
+      <HomeScreen />
     </AppContainer>
   )
 }
