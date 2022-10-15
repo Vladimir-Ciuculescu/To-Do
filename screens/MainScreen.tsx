@@ -1,5 +1,6 @@
 import React from 'react'
-import { Center, Text, Box } from 'native-base'
+import { Center, Text, Box, VStack } from 'native-base'
+import ThemeToggle from '../components/ThemeToggle'
 
 const MainScreen: React.FC<any> = () => {
   return (
@@ -9,9 +10,12 @@ const MainScreen: React.FC<any> = () => {
       px={4}
       flex={1}
     >
-      <Box>
-        <Text>Hello thereawdad</Text>
-      </Box>
+      <VStack space={2} alignItems={'center'}>
+        <Box alignItems={'center'}>
+          <Text>Hello thereawdad</Text>
+          <ThemeToggle />
+        </Box>
+      </VStack>
     </Center>
   )
 }
