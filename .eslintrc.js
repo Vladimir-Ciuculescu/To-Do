@@ -13,6 +13,7 @@ module.exports = {
         'prettier/prettier': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         semi: 'off',
+        'react/self-closing-comp': 'off',
       },
     },
   ],

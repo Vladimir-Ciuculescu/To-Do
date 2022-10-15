@@ -1,13 +1,12 @@
 import React from 'react'
-import { SafeAreaView, Text, View } from 'react-native'
+import { Text } from 'react-native'
 import AppContainer from './components/AppContaier'
+import MainScreen from './screens/MainScreen'
 
 const App = () => {
   return (
     <AppContainer>
-      <View>
-        <Text>Hello there</Text>
-      </View>
+      <MainScreen />
     </AppContainer>
   )
 }
