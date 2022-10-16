@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, Dimensions } from 'react-native'
 import {
   PanGestureHandler,
@@ -20,31 +20,38 @@ interface ListItem
   onDismiss?: (task: TaskItem) => void
 }
 
-const lIST_ITEM_HIEGHT = 70
+const LIST_ITEM_DIMENSION = 70
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-const X_THRESHOLD = -SCREEN_WIDTH * 0.25
+const X_THRESHOLD = -SCREEN_WIDTH * 0.17
 
 const ListItem: React.FC<ListItem> = ({
   task,
   onDismiss,
   simultaneousHandlers,
 }) => {
-  const translateX = useSharedValue(0)
-  const itemHeight = useSharedValue(lIST_ITEM_HIEGHT)
+  const [isHalfSwiped, setIsHalfSwiped] = useState(false)
+  const [actualValue, setActualValue] = useState(20)
+
+  const translateX = useSharedValue(isHalfSwiped ? -LIST_ITEM_DIMENSION : 0)
+  const itemHeight = useSharedValue(LIST_ITEM_DIMENSION)
   const iconMarginVertical = useSharedValue(10)
   const iconOpacity = useSharedValue(1)
 
   const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+    // },
+
     onActive: (event) => {
-      translateX.value = event.translationX
+      const distance = isHalfSwiped
+        ? event.translationX - LIST_ITEM_DIMENSION
+        : event.translationX
+      translateX.value = distance
     },
 
     onEnd: () => {
-      const shouldBeDismissed = translateX.value < X_THRESHOLD
-
-      if (shouldBeDismissed) {
+      //If task is dragged too much on the left
+      if (translateX.value < -SCREEN_WIDTH * 0.4) {
         translateX.value = withTiming(-SCREEN_WIDTH, { duration: 500 })
         itemHeight.value = withTiming(0)
         iconMarginVertical.value = withTiming(0)
@@ -53,8 +60,18 @@ const ListItem: React.FC<ListItem> = ({
             runOnJS(onDismiss)(task)
           }
         })
+        runOnJS(setIsHalfSwiped)(false)
+
+        //If is between initial position or not too much to be dragged on the left
+      } else if (
+        translateX.value >= -SCREEN_WIDTH * 0.4 &&
+        translateX.value <= -SCREEN_WIDTH * 0.17
+      ) {
+        translateX.value = withTiming(-LIST_ITEM_DIMENSION, { duration: 500 })
+        runOnJS(setIsHalfSwiped)(true)
       } else {
         translateX.value = withTiming(0, { duration: 500 })
+        runOnJS(setIsHalfSwiped)(false)
       }
     },
   })
@@ -85,7 +102,11 @@ const ListItem: React.FC<ListItem> = ({
   return (
     <Animated.View style={[styles.taskContainer, taskContainerAnimatedStyle]}>
       <Animated.View style={[styles.iconContaier, IconAnimatedStyle]}>
-        <FontAwesome name="trash-o" size={lIST_ITEM_HIEGHT * 0.4} color="red" />
+        <FontAwesome
+          name="trash-o"
+          size={LIST_ITEM_DIMENSION * 0.4}
+          color="red"
+        />
       </Animated.View>
       <PanGestureHandler
         simultaneousHandlers={simultaneousHandlers}
@@ -107,7 +128,7 @@ const styles = StyleSheet.create({
 
   task: {
     width: '90%',
-    height: lIST_ITEM_HIEGHT,
+    height: LIST_ITEM_DIMENSION,
 
     justifyContent: 'center',
     backgroundColor: 'white',
@@ -124,12 +145,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   iconContaier: {
-    height: lIST_ITEM_HIEGHT,
-    width: lIST_ITEM_HIEGHT,
+    height: LIST_ITEM_DIMENSION,
+    width: LIST_ITEM_DIMENSION,
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
-    right: '10%',
+    right: '5%',
   },
 })
 
