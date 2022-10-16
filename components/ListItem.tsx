@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, Dimensions } from 'react-native'
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -11,13 +11,22 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
 interface ListItem {
   task: TaskItem
 }
 
+const lIST_ITEM_HIEGHT = 70
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
+
+const X_THRESHOLD = -SCREEN_WIDTH * 0.25
+
 const ListItem: React.FC<ListItem> = ({ task }) => {
   const translateX = useSharedValue(0)
+  const itemHeight = useSharedValue(lIST_ITEM_HIEGHT)
+  const iconMarginVertical = useSharedValue(10)
+  const iconOpacity = useSharedValue(1)
 
   const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
     onActive: (event) => {
@@ -25,11 +34,20 @@ const ListItem: React.FC<ListItem> = ({ task }) => {
     },
 
     onEnd: () => {
-      translateX.value = withTiming(0)
+      const shouldBeDismissed = translateX.value < X_THRESHOLD
+
+      if (shouldBeDismissed) {
+        translateX.value = withTiming(-SCREEN_WIDTH, { duration: 500 })
+        itemHeight.value = withTiming(0)
+        iconMarginVertical.value = withTiming(0)
+        iconOpacity.value = withTiming(0)
+      } else {
+        translateX.value = withTiming(0, { duration: 500 })
+      }
     },
   })
 
-  const rStyle = useAnimatedStyle(() => ({
+  const taskReanimatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
         translateX: translateX.value,
@@ -37,14 +55,32 @@ const ListItem: React.FC<ListItem> = ({ task }) => {
     ],
   }))
 
+  const IconAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = withTiming(translateX.value < X_THRESHOLD ? 1 : 0, {
+      duration: 300,
+    })
+    return { opacity }
+  })
+
+  const taskContainerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      height: itemHeight.value,
+      marginVertical: iconMarginVertical.value,
+      opacity: iconOpacity.value,
+    }
+  })
+
   return (
-    <View style={styles.taskContainer}>
+    <Animated.View style={[styles.taskContainer, taskContainerAnimatedStyle]}>
+      <Animated.View style={[styles.iconContaier, IconAnimatedStyle]}>
+        <FontAwesome name="trash-o" size={lIST_ITEM_HIEGHT * 0.4} color="red" />
+      </Animated.View>
       <PanGestureHandler onGestureEvent={panGesture}>
-        <Animated.View style={[styles.task, rStyle]}>
+        <Animated.View style={[styles.task, taskReanimatedStyle]}>
           <Text style={styles.taskTitle}>{task.title}</Text>
         </Animated.View>
       </PanGestureHandler>
-    </View>
+    </Animated.View>
   )
 }
 
@@ -56,8 +92,8 @@ const styles = StyleSheet.create({
 
   task: {
     width: '90%',
-    height: 70,
-    marginVertical: 10,
+    height: lIST_ITEM_HIEGHT,
+
     justifyContent: 'center',
     backgroundColor: 'white',
     paddingLeft: 20,
@@ -71,6 +107,14 @@ const styles = StyleSheet.create({
   },
   taskTitle: {
     fontSize: 16,
+  },
+  iconContaier: {
+    height: lIST_ITEM_HIEGHT,
+    width: lIST_ITEM_HIEGHT,
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    right: '10%',
   },
 })
 
