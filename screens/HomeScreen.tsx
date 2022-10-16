@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Center, Text, Box, VStack, Pressable } from 'native-base'
 import ThemeToggle from '../components/ThemeToggle'
 import AnimatedCheckbox from 'react-native-checkbox-reanimated'
@@ -8,9 +8,8 @@ import {
   SafeAreaView,
   View,
   StatusBar,
-  ScrollView,
 } from 'react-native'
-import { Swipeable, RectButton } from 'react-native-gesture-handler'
+import { Swipeable, RectButton, ScrollView } from 'react-native-gesture-handler'
 import ListItem from '../components/ListItem'
 
 export interface TaskItem {
@@ -29,6 +28,8 @@ const HomeScreen: React.FC<any> = () => {
   const TASKS: TaskItem[] = TITLES.map((title, index) => ({ title, index }))
 
   const [tasks, setTasks] = useState(TASKS)
+
+  const scrollRef = useRef(null)
 
   //   const renderLeftActions = (progress, dragX) => {
   //     const trans = dragX.interpolate({
@@ -51,13 +52,22 @@ const HomeScreen: React.FC<any> = () => {
   //     )
   //   }
 
+  const removeTask = (task: TaskItem) => {
+    setTasks(tasks.filter((item) => item.index !== task.index))
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={'default'} />
       <Text style={styles.title}>Tasks</Text>
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }}>
         {tasks.map((task) => (
-          <ListItem key={task.index} task={task}></ListItem>
+          <ListItem
+            simultaneousHandlers={scrollRef}
+            onDismiss={removeTask}
+            key={task.index}
+            task={task}
+          ></ListItem>
         ))}
       </ScrollView>
       {/* <Center
