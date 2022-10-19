@@ -10,9 +10,9 @@ import {
   StatusBar,
 } from 'react-native'
 import { Swipeable, RectButton, ScrollView } from 'react-native-gesture-handler'
-import ListItem from '../components/ListItem'
+import TaskItem from '../components/TaskItem'
 
-export interface TaskItem {
+export interface TaskItemInterface {
   index: number
   title: string
 }
@@ -25,7 +25,10 @@ const HomeScreen: React.FC<any> = () => {
     'Take the kid from school',
   ]
 
-  const TASKS: TaskItem[] = TITLES.map((title, index) => ({ title, index }))
+  const TASKS: TaskItemInterface[] = TITLES.map((title, index) => ({
+    title,
+    index,
+  }))
 
   const [tasks, setTasks] = useState(TASKS)
 
@@ -52,7 +55,7 @@ const HomeScreen: React.FC<any> = () => {
   //     )
   //   }
 
-  const removeTask = (task: TaskItem) => {
+  const removeTask = (task: TaskItemInterface) => {
     setTasks(tasks.filter((item) => item.index !== task.index))
   }
 
@@ -62,12 +65,12 @@ const HomeScreen: React.FC<any> = () => {
       <Text style={styles.title}>Tasks</Text>
       <ScrollView ref={scrollRef} style={{ flex: 1 }}>
         {tasks.map((task) => (
-          <ListItem
+          <TaskItem
             simultaneousHandlers={scrollRef}
             onDismiss={removeTask}
             key={task.index}
             task={task}
-          ></ListItem>
+          ></TaskItem>
         ))}
       </ScrollView>
       {/* <Center

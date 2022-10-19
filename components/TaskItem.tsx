@@ -1,23 +1,38 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet, Dimensions } from 'react-native'
+import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native'
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
   PanGestureHandlerProps,
 } from 'react-native-gesture-handler'
-import { TaskItem } from '../screens/HomeScreen'
+import { TaskItemInterface } from '../screens/HomeScreen'
 import Animated, {
+  Easing,
+  EasingNode,
   runOnJS,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import TaskLabel from './TaskLabel'
+import {
+  Box,
+  HStack,
+  themeTools,
+  useColorMode,
+  useColorModeValue,
+} from 'native-base'
+import theme from '../Theme'
+import AnimatedCheckbox from 'react-native-checkbox-reanimated'
+import StrikeLine from './StrikeLine'
+
 interface ListItem
   extends Pick<PanGestureHandlerProps, 'simultaneousHandlers'> {
-  task: TaskItem
-  onDismiss?: (task: TaskItem) => void
+  task: TaskItemInterface
+  onDismiss?: (task: TaskItemInterface) => void
 }
 
 const LIST_ITEM_DIMENSION = 70
@@ -26,27 +41,73 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 const X_THRESHOLD = -SCREEN_WIDTH * 0.17
 
-const ListItem: React.FC<ListItem> = ({
+const TaskItem: React.FC<ListItem> = ({
   task,
   onDismiss,
   simultaneousHandlers,
 }) => {
+  const [checked, setChecked] = useState(false)
   const [isHalfSwiped, setIsHalfSwiped] = useState(false)
-  const [actualValue, setActualValue] = useState(20)
 
-  const translateX = useSharedValue(isHalfSwiped ? -LIST_ITEM_DIMENSION : 0)
+  const translateX = useSharedValue(0)
   const itemHeight = useSharedValue(LIST_ITEM_DIMENSION)
   const iconMarginVertical = useSharedValue(10)
   const iconOpacity = useSharedValue(1)
+  const hStackOffset = useSharedValue(0)
+
+  const hStackAnimatedStyle = useAnimatedStyle(
+    () => ({
+      transform: [
+        {
+          translateX: hStackOffset.value,
+        },
+      ],
+    }),
+    [checked],
+  )
+
+  const activeTextColor = themeTools.getColor(
+    theme,
+    useColorModeValue('darkText', 'lightText'),
+  )
+
+  const doneTextColor = themeTools.getColor(
+    theme,
+    useColorModeValue('muted.400', 'muted.600'),
+  )
+
+  // const theme = useTheme()
+
+  const highlightColor = themeTools.getColor(
+    theme,
+    useColorModeValue('blue.500', 'blue.400'),
+  )
+
+  const boxStroke = themeTools.getColor(
+    theme,
+    useColorModeValue('muted.300', 'muted.500'),
+  )
+
+  const checkmarkColor = themeTools.getColor(
+    theme,
+    useColorModeValue('white', 'white'),
+  )
+  useEffect(() => {
+    const easing = Easing.out(Easing.quad)
+    if (checked) {
+      hStackOffset.value = withSequence(
+        withTiming(4, { duration: 200, easing }),
+        withTiming(0, { duration: 200, easing }),
+      )
+    }
+  })
 
   const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
-    // },
-
     onActive: (event) => {
-      const distance = isHalfSwiped
+      const offSet = isHalfSwiped
         ? event.translationX - LIST_ITEM_DIMENSION
         : event.translationX
-      translateX.value = distance
+      translateX.value = offSet
     },
 
     onEnd: () => {
@@ -55,7 +116,7 @@ const ListItem: React.FC<ListItem> = ({
         translateX.value = withTiming(-SCREEN_WIDTH, { duration: 500 })
         itemHeight.value = withTiming(0)
         iconMarginVertical.value = withTiming(0)
-        iconOpacity.value = withTiming(0, undefined, (isFinished) => {
+        iconOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
           if (isFinished && onDismiss) {
             runOnJS(onDismiss)(task)
           }
@@ -99,6 +160,8 @@ const ListItem: React.FC<ListItem> = ({
     }
   })
 
+  const AnimatedHStak = Animated.createAnimatedComponent(HStack)
+
   return (
     <Animated.View style={[styles.taskContainer, taskContainerAnimatedStyle]}>
       <Animated.View style={[styles.iconContaier, IconAnimatedStyle]}>
@@ -113,7 +176,28 @@ const ListItem: React.FC<ListItem> = ({
         onGestureEvent={panGesture}
       >
         <Animated.View style={[styles.task, taskReanimatedStyle]}>
-          <Text style={styles.taskTitle}>{task.title}</Text>
+          <HStack alignItems="center">
+            <Box width={37} height={37} ml={-3} mr={3}>
+              <Pressable onPress={() => setChecked(!checked)}>
+                <AnimatedCheckbox
+                  boxOutlineColor={boxStroke}
+                  highlightColor={highlightColor}
+                  checkmarkColor={checkmarkColor}
+                  checked={checked}
+                />
+              </Pressable>
+            </Box>
+
+            <AnimatedHStak style={hStackAnimatedStyle}>
+              <TaskLabel
+                textColor={activeTextColor}
+                doneTextColor={doneTextColor}
+                label={task.title}
+                checked={checked}
+              />
+              <StrikeLine striked={checked} />
+            </AnimatedHStak>
+          </HStack>
         </Animated.View>
       </PanGestureHandler>
     </Animated.View>
@@ -141,9 +225,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     borderRadius: 10,
   },
-  taskTitle: {
-    fontSize: 16,
-  },
+
   iconContaier: {
     height: LIST_ITEM_DIMENSION,
     width: LIST_ITEM_DIMENSION,
@@ -154,4 +236,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default ListItem
+export default TaskItem

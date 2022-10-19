@@ -15,6 +15,7 @@ module.exports = {
         semi: 'off',
         'react/self-closing-comp': 'off',
         'react-native/no-inline-styles': 'off',
+        'react-hooks/exhaustive-deps': 'off',
       },
     },
   ],
