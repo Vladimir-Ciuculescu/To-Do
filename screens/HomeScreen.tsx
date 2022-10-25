@@ -1,5 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Center, Text, Box, VStack, Pressable } from 'native-base'
+import {
+  Center,
+  Text,
+  Box,
+  VStack,
+  Pressable,
+  Input,
+  Accordion,
+  Button,
+} from 'native-base'
 import ThemeToggle from '../components/ThemeToggle'
 import AnimatedCheckbox from 'react-native-checkbox-reanimated'
 import {
@@ -8,6 +17,8 @@ import {
   SafeAreaView,
   View,
   StatusBar,
+  TextInput,
+  FlatList,
 } from 'react-native'
 import { Swipeable, RectButton, ScrollView } from 'react-native-gesture-handler'
 import TaskItem from '../components/TaskItem'
@@ -25,64 +36,73 @@ const HomeScreen: React.FC<any> = () => {
     'Take the kid from school',
   ]
 
-  const TASKS: TaskItemInterface[] = TITLES.map((title, index) => ({
-    title,
-    index,
-  }))
+  const dataArray = [
+    { title: 'First Element', description: 'Lorem ipsum dolor sit amet' },
+    {
+      title: 'Second Element',
+      description: 'Lorem ipsum dolor sit ametawdafgsregszafgzdhrghzdghzrsef',
+    },
+    {
+      title: 'Third Element',
+      description: 'Loras`fgzdtrsethaawha`whgsem ipsum dolor sit amet',
+    },
+  ]
+
+  const TASKS: TaskItemInterface[] = TITLES.map(
+    (title, index, description) => ({
+      title,
+      index,
+      description,
+    }),
+  )
 
   const [tasks, setTasks] = useState(TASKS)
 
   const scrollRef = useRef(null)
 
-  //   const renderLeftActions = (progress, dragX) => {
-  //     const trans = dragX.interpolate({
-  //       inputRange: [0, 50, 100, 101],
-  //       outputRange: [-20, 0, 0, 1],
-  //     })
-  //     return (
-  //       <RectButton>
-  //         <Animated.Text
-  //           style={[
-  //             styles.actionText,
-  //             {
-  //               transform: [{ translateX: trans }],
-  //             },
-  //           ]}
-  //         >
-  //           Archive
-  //         </Animated.Text>
-  //       </RectButton>
-  //     )
-  //   }
-
   const removeTask = (task: TaskItemInterface) => {
     setTasks(tasks.filter((item) => item.index !== task.index))
   }
+
+  const data = [
+    {
+      id: 0,
+      title: 'Bla',
+      description: 'ghznesha`r`f`segfae``esg`segesgafg`sf`a',
+    },
+    {
+      id: 1,
+      title: 'Bla bla',
+      description:
+        'ghznesha`r`f`sages`f`wagfawegfae`gafg`sf`awafs`gsghw`fghzegzegzse',
+    },
+  ]
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={'default'} />
       <Text style={styles.title}>Tasks</Text>
-      <ScrollView ref={scrollRef} style={{ flex: 1 }}>
-        {tasks.map((task) => (
-          <TaskItem
-            simultaneousHandlers={scrollRef}
-            onDismiss={removeTask}
-            key={task.index}
-            task={task}
-          ></TaskItem>
-        ))}
-      </ScrollView>
-      {/* <Center
-        _dark={{ bg: 'blueGray.900' }}
-        _light={{ bg: 'blueGray.50' }}
-        px={4}
-        flex={1}
-      >
-        <VStack space={2} alignItems={'center'}>
-          <Text>Awdw</Text>
+      <ScrollView ref={scrollRef}>
+        <VStack space={5}>
+          {tasks.map((task) => (
+            <TaskItem
+              simultaneousHandlers={scrollRef}
+              onDismiss={removeTask}
+              key={task.index}
+              task={task}
+            />
+          ))}
         </VStack>
-      </Center> */}
+      </ScrollView>
+      {/* <View style={styles.containerTest}>
+        <FlatList
+          data={data}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <AccordionTest title={item.title} description={item.description} />
+          )}
+        />
+      </View> */}
     </SafeAreaView>
   )
 }
@@ -93,9 +113,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
+  containerTest: {
+    height: '100%',
+    backgroundColor: 'red',
+  },
+
   title: {
     fontSize: 60,
     paddingLeft: 20,
     paddingTop: 70,
+  },
+  test: {
+    width: '60%',
+    justifyContent: 'center',
+    backgroundColor: 'red',
+    paddingLeft: 20,
+    shadowOpacity: 0.08,
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowRadius: 10,
+    borderRadius: 10,
   },
 })

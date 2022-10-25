@@ -1,45 +1,53 @@
-import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Animated as Animation,
+  LayoutAnimation,
+} from 'react-native'
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
   PanGestureHandlerProps,
+  TextInput,
 } from 'react-native-gesture-handler'
 import { TaskItemInterface } from '../screens/HomeScreen'
 import Animated, {
   Easing,
-  EasingNode,
+  interpolate,
   runOnJS,
   useAnimatedGestureHandler,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import Feather from 'react-native-vector-icons/Feather'
 import TaskLabel from './TaskLabel'
 import {
   Box,
   HStack,
   themeTools,
-  useColorMode,
   useColorModeValue,
+  Pressable,
+  Text,
 } from 'native-base'
 import theme from '../Theme'
 import AnimatedCheckbox from 'react-native-checkbox-reanimated'
 import StrikeLine from './StrikeLine'
-
 interface ListItem
   extends Pick<PanGestureHandlerProps, 'simultaneousHandlers'> {
   task: TaskItemInterface
   onDismiss?: (task: TaskItemInterface) => void
 }
 
-const LIST_ITEM_DIMENSION = 70
-
+//Consts
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
-
 const X_THRESHOLD = -SCREEN_WIDTH * 0.17
+const LIST_ITEM_DIMENSION = 70
 
 const TaskItem: React.FC<ListItem> = ({
   task,
@@ -48,23 +56,48 @@ const TaskItem: React.FC<ListItem> = ({
 }) => {
   const [checked, setChecked] = useState(false)
   const [isHalfSwiped, setIsHalfSwiped] = useState(false)
+  const [isEdit, setIsEdit] = useState(false)
+  const [subject, setSubject] = useState(task.title)
+  const [showDescription, setShowDescription] = useState(false)
 
   const translateX = useSharedValue(0)
   const itemHeight = useSharedValue(LIST_ITEM_DIMENSION)
   const iconMarginVertical = useSharedValue(10)
   const iconOpacity = useSharedValue(1)
   const hStackOffset = useSharedValue(0)
+  const marginTopOffset = useSharedValue(0)
+  const rotateDegrees = useSharedValue(0)
 
-  const hStackAnimatedStyle = useAnimatedStyle(
-    () => ({
-      transform: [
-        {
-          translateX: hStackOffset.value,
-        },
-      ],
-    }),
-    [checked],
-  )
+  const animationController = useRef(new Animation.Value(0)).current
+
+  const toggleAnimation = {
+    duration: 20,
+    update: {
+      duration: 300,
+      property: LayoutAnimation.Properties.opacity,
+      type: LayoutAnimation.Types.easeInEaseOut,
+    },
+    delete: {
+      duration: 300,
+      property: LayoutAnimation.Properties.opacity,
+      type: LayoutAnimation.Types.easeInEaseOut,
+    },
+  }
+
+  const toggleTaskDescription = () => {
+    const config = {
+      duration: 300,
+      toValue: showDescription ? 0 : 1,
+      useNativeDriver: true,
+    }
+    Animation.timing(animationController, config).start()
+    LayoutAnimation.configureNext(toggleAnimation)
+    setShowDescription(!showDescription)
+  }
+
+  const rotation = useDerivedValue(() => {
+    return interpolate(rotateDegrees.value, [0, 360], [0, 360])
+  })
 
   const activeTextColor = themeTools.getColor(
     theme,
@@ -75,8 +108,6 @@ const TaskItem: React.FC<ListItem> = ({
     theme,
     useColorModeValue('muted.400', 'muted.600'),
   )
-
-  // const theme = useTheme()
 
   const highlightColor = themeTools.getColor(
     theme,
@@ -94,13 +125,31 @@ const TaskItem: React.FC<ListItem> = ({
   )
   useEffect(() => {
     const easing = Easing.out(Easing.quad)
-    if (checked) {
+
+    if (checked || isEdit) {
       hStackOffset.value = withSequence(
         withTiming(4, { duration: 200, easing }),
         withTiming(0, { duration: 200, easing }),
       )
     }
+
+    if (showDescription) {
+      rotateDegrees.value = withTiming(90, { duration: 200 })
+    } else {
+      rotateDegrees.value = withTiming(0, { duration: 200 })
+    }
   })
+
+  useEffect(() => {
+    if (checked) {
+      setIsEdit(false)
+    }
+  }, [checked])
+
+  const makeTaskEditable = () => {
+    setChecked(false)
+    setIsEdit(true)
+  }
 
   const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
     onActive: (event) => {
@@ -113,10 +162,11 @@ const TaskItem: React.FC<ListItem> = ({
     onEnd: () => {
       //If task is dragged too much on the left
       if (translateX.value < -SCREEN_WIDTH * 0.4) {
-        translateX.value = withTiming(-SCREEN_WIDTH, { duration: 500 })
+        translateX.value = withTiming(-SCREEN_WIDTH, { duration: 300 })
         itemHeight.value = withTiming(0)
         iconMarginVertical.value = withTiming(0)
-        iconOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+        marginTopOffset.value = withTiming(-90, { duration: 1000 })
+        iconOpacity.value = withTiming(0, { duration: 1000 }, (isFinished) => {
           if (isFinished && onDismiss) {
             runOnJS(onDismiss)(task)
           }
@@ -149,18 +199,24 @@ const TaskItem: React.FC<ListItem> = ({
     const opacity = withTiming(translateX.value < X_THRESHOLD ? 1 : 0, {
       duration: 300,
     })
-    return { opacity }
+
+    const marginTop = -marginTopOffset.value
+
+    return { opacity, marginTop }
   })
 
   const taskContainerAnimatedStyle = useAnimatedStyle(() => {
     return {
-      height: itemHeight.value,
-      marginVertical: iconMarginVertical.value,
+      marginTop: marginTopOffset.value,
       opacity: iconOpacity.value,
     }
   })
 
-  const AnimatedHStak = Animated.createAnimatedComponent(HStack)
+  const rotateStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: rotation.value + 'deg' }],
+    }
+  })
 
   return (
     <Animated.View style={[styles.taskContainer, taskContainerAnimatedStyle]}>
@@ -176,28 +232,73 @@ const TaskItem: React.FC<ListItem> = ({
         onGestureEvent={panGesture}
       >
         <Animated.View style={[styles.task, taskReanimatedStyle]}>
-          <HStack alignItems="center">
-            <Box width={37} height={37} ml={-3} mr={3}>
-              <Pressable onPress={() => setChecked(!checked)}>
-                <AnimatedCheckbox
-                  boxOutlineColor={boxStroke}
-                  highlightColor={highlightColor}
-                  checkmarkColor={checkmarkColor}
-                  checked={checked}
-                />
-              </Pressable>
-            </Box>
+          <View style={styles.overflowContainer}>
+            <HStack alignItems="center" pt={showDescription ? 4 : 0}>
+              <Box width={37} height={37} ml={-3} mr={3}>
+                <Pressable onPress={() => setChecked(!checked)}>
+                  <AnimatedCheckbox
+                    boxOutlineColor={boxStroke}
+                    highlightColor={highlightColor}
+                    checkmarkColor={checkmarkColor}
+                    checked={checked}
+                  />
+                </Pressable>
+              </Box>
 
-            <AnimatedHStak style={hStackAnimatedStyle}>
-              <TaskLabel
-                textColor={activeTextColor}
-                doneTextColor={doneTextColor}
-                label={task.title}
-                checked={checked}
-              />
-              <StrikeLine striked={checked} />
-            </AnimatedHStak>
-          </HStack>
+              <HStack>
+                {isEdit ? (
+                  <TextInput
+                    style={styles.taskInput}
+                    value={subject}
+                    onBlur={() => setIsEdit(false)}
+                    onChangeText={(e) => setSubject(e)}
+                    autoFocus
+                  />
+                ) : (
+                  <Box>
+                    <Pressable onPress={makeTaskEditable}>
+                      <TaskLabel
+                        textColor={activeTextColor}
+                        doneTextColor={doneTextColor}
+                        label={subject}
+                        checked={checked}
+                      />
+                    </Pressable>
+                    <StrikeLine striked={checked} />
+                  </Box>
+                )}
+              </HStack>
+
+              <Box position="absolute" right={0} top={showDescription ? 5 : 1}>
+                <Pressable onPress={() => toggleTaskDescription()}>
+                  <Animated.View style={[rotateStyle]}>
+                    <Feather
+                      name="arrow-right"
+                      size={LIST_ITEM_DIMENSION * 0.4}
+                      color="black"
+                    />
+                  </Animated.View>
+                </Pressable>
+              </Box>
+            </HStack>
+
+            {showDescription ? (
+              <Box pt={4} pb={4}>
+                <Text fontSize={16}>
+                  Lorem Ipsum is simply dummy text of the printing and
+                  typesetting industry. Lorem Ipsum has been the industry's
+                  standard dummy text ever since the 1500s, when an unknown
+                  printer took a galley of type and scrambled it to make a type
+                  specimen book. It has survived not only five centuries, but
+                  also the leap into electronic typesetting, remaining
+                  essentially unchanged. It was popularised in the 1960s with
+                  the release of Letraset sheets containing Lorem Ipsum
+                  passages, and more recently with desktop publishing software
+                  like Aldus PageMaker including versions of Lorem Ipsum.
+                </Text>
+              </Box>
+            ) : null}
+          </View>
         </Animated.View>
       </PanGestureHandler>
     </Animated.View>
@@ -210,10 +311,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  overflowContainer: {
+    overflow: 'hidden',
+    paddingHorizontal: '3%',
+  },
+
   task: {
     width: '90%',
-    height: LIST_ITEM_DIMENSION,
-
+    minHeight: 70,
+    height: 'auto',
     justifyContent: 'center',
     backgroundColor: 'white',
     paddingLeft: 20,
@@ -226,6 +332,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
+  taskInput: {
+    fontSize: 18,
+  },
+
   iconContaier: {
     height: LIST_ITEM_DIMENSION,
     width: LIST_ITEM_DIMENSION,
@@ -234,6 +344,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     right: '5%',
   },
+
+  taskDescription: {},
 })
 
 export default TaskItem
