@@ -1,108 +1,103 @@
-import React, { useEffect, useRef, useState } from 'react'
 import {
-  Center,
-  Text,
-  Box,
-  VStack,
-  Pressable,
-  Input,
-  Accordion,
-  Button,
-} from 'native-base'
-import ThemeToggle from '../components/ThemeToggle'
-import AnimatedCheckbox from 'react-native-checkbox-reanimated'
-import {
-  StyleSheet,
-  Animated,
-  SafeAreaView,
   View,
-  StatusBar,
-  TextInput,
+  Button,
+  Text,
+  Pressable,
+  Center,
+  Divider,
+  VStack,
+  HStack,
+  Box,
+  themeTools,
+  useColorModeValue,
+  Fab,
   FlatList,
+  Card,
+} from 'native-base'
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Dimensions,
 } from 'react-native'
-import { Swipeable, RectButton, ScrollView } from 'react-native-gesture-handler'
-import TaskItem from '../components/TaskItem'
+import React from 'react'
+import { useNavigation } from '@react-navigation/native'
+import Theme from '../Theme'
+import ThemeToggle from '../components/ThemeToggle'
+import { TaskItemInterface } from './TaskList'
 
-export interface TaskItemInterface {
-  index: number
-  title: string
-}
+const list = [
+  {
+    id: 1,
+    title: 'Gym',
+  },
+  {
+    id: 2,
+    title: 'Groceries',
+  },
+  {
+    id: 3,
+    title: 'Kid',
+  },
+]
 
-const HomeScreen: React.FC<any> = () => {
-  const TITLES = [
-    'Do groceries',
-    'Go to the gym',
-    'Walk the dog',
-    'Take the kid from school',
-  ]
+const windowHeight = Dimensions.get('window').height
 
-  const dataArray = [
-    { title: 'First Element', description: 'Lorem ipsum dolor sit amet' },
-    {
-      title: 'Second Element',
-      description: 'Lorem ipsum dolor sit ametawdafgsregszafgzdhrghzdghzrsef',
-    },
-    {
-      title: 'Third Element',
-      description: 'Loras`fgzdtrsethaawha`whgsem ipsum dolor sit amet',
-    },
-  ]
+const HomeScreen = () => {
+  const navigation = useNavigation()
 
-  const TASKS: TaskItemInterface[] = TITLES.map(
-    (title, index, description) => ({
-      title,
-      index,
-      description,
-    }),
+  const ifyColor = themeTools.getColor(
+    Theme,
+    useColorModeValue('info.400', 'blue.400'),
   )
 
-  const [tasks, setTasks] = useState(TASKS)
-
-  const scrollRef = useRef(null)
-
-  const removeTask = (task: TaskItemInterface) => {
-    setTasks(tasks.filter((item) => item.index !== task.index))
-  }
-
-  const data = [
-    {
-      id: 0,
-      title: 'Bla',
-      description: 'ghznesha`r`f`segfae``esg`segesgafg`sf`a',
-    },
-    {
-      id: 1,
-      title: 'Bla bla',
-      description:
-        'ghznesha`r`f`sages`f`wagfawegfae`gafg`sf`awafs`gsghw`fghzegzegzse',
-    },
-  ]
+  const todoColor = themeTools.getColor(
+    Theme,
+    useColorModeValue('darkText', 'whiteText'),
+  )
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={'default'} />
-      <Text style={styles.title}>Tasks</Text>
-      <ScrollView ref={scrollRef}>
-        <VStack space={5}>
-          {tasks.map((task) => (
-            <TaskItem
-              simultaneousHandlers={scrollRef}
-              onDismiss={removeTask}
-              key={task.index}
-              task={task}
-            />
-          ))}
-        </VStack>
-      </ScrollView>
-      {/* <View style={styles.containerTest}>
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <AccordionTest title={item.title} description={item.description} />
-          )}
-        />
-      </View> */}
+    <SafeAreaView
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        top: '10%',
+      }}
+    >
+      <HStack>
+        <Divider color="red" />
+        <Box mt={-7} pl={8} pr={8}>
+          <HStack space={2}>
+            <Text fontWeight={'bold'} fontSize={38} color={todoColor}>
+              ToDo
+            </Text>
+            <Text fontWeight={300} fontSize={38} color={ifyColor}>
+              Ify
+            </Text>
+          </HStack>
+        </Box>
+        <Divider color="red" />
+      </HStack>
+      <VStack space={2} width="85%" top={9}>
+        {list.map((item) => (
+          <Pressable onPress={() => navigation.navigate('TaskList')}>
+            <Box
+              rounded="xl"
+              width="100%"
+              bg="primary.300"
+              p="4"
+              shadow={9}
+              _text={{
+                fontSize: 'md',
+                fontWeight: 'bold',
+              }}
+            >
+              {item.title}
+            </Box>
+          </Pressable>
+        ))}
+      </VStack>
     </SafeAreaView>
   )
 }
@@ -112,29 +107,12 @@ export default HomeScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-
-  containerTest: {
-    height: '100%',
-    backgroundColor: 'red',
+    alignItems: 'center',
   },
 
   title: {
     fontSize: 60,
     paddingLeft: 20,
     paddingTop: 70,
-  },
-  test: {
-    width: '60%',
-    justifyContent: 'center',
-    backgroundColor: 'red',
-    paddingLeft: 20,
-    shadowOpacity: 0.08,
-    shadowOffset: {
-      width: 0,
-      height: 20,
-    },
-    shadowRadius: 10,
-    borderRadius: 10,
   },
 })

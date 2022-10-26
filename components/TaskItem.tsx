@@ -12,7 +12,7 @@ import {
   PanGestureHandlerProps,
   TextInput,
 } from 'react-native-gesture-handler'
-import { TaskItemInterface } from '../screens/HomeScreen'
+import { TaskItemInterface } from '../screens/TaskList'
 import Animated, {
   Easing,
   interpolate,
