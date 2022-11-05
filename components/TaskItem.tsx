@@ -46,7 +46,7 @@ interface ListItem
 
 //Consts
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
-const X_THRESHOLD = -SCREEN_WIDTH * 0.17
+const X_THRESHOLD = -SCREEN_WIDTH * 0.15
 const LIST_ITEM_DIMENSION = 70
 
 const TaskItem: React.FC<ListItem> = ({
@@ -176,7 +176,7 @@ const TaskItem: React.FC<ListItem> = ({
         //If is between initial position or not too much to be dragged on the left
       } else if (
         translateX.value >= -SCREEN_WIDTH * 0.4 &&
-        translateX.value <= -SCREEN_WIDTH * 0.17
+        translateX.value <= -SCREEN_WIDTH * 0.1
       ) {
         translateX.value = withTiming(-LIST_ITEM_DIMENSION, { duration: 500 })
         runOnJS(setIsHalfSwiped)(true)
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
 
   task: {
-    width: '90%',
+    width: '85%',
     minHeight: 70,
     height: 'auto',
     justifyContent: 'center',

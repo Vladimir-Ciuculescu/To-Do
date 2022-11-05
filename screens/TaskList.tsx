@@ -1,9 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Text, VStack } from 'native-base'
-import { StyleSheet, SafeAreaView, StatusBar } from 'react-native'
+import { Text, VStack, Fab, Box, Icon } from 'native-base'
+import { StyleSheet, SafeAreaView, StatusBar, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import TaskItem from '../components/TaskItem'
-import ThemeToggle from '../components/ThemeToggle'
+import Feather from 'react-native-vector-icons/Feather'
+import AddTaskModal from '../components/AddTaskModal'
+import { useNavigation } from '@react-navigation/native'
+import { makeStyledComponent } from '../utils/Styled'
+import { AnimatePresence, MotiView } from 'moti'
 
 export interface TaskItemInterface {
   index: number
@@ -26,7 +30,13 @@ const TaskList: React.FC<any> = () => {
     }),
   )
 
+  const StyledView = makeStyledComponent(View)
+
   const [tasks, setTasks] = useState(TASKS)
+
+  const navigation = useNavigation()
+
+  const [showModal, setShowModal] = useState(false)
 
   const scrollRef = useRef(null)
 
@@ -34,22 +44,51 @@ const TaskList: React.FC<any> = () => {
     setTasks(tasks.filter((item) => item.index !== task.index))
   }
 
+  const closeModal = () => {
+    setShowModal(false)
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={'default'} />
 
       <ScrollView ref={scrollRef}>
-        <VStack space={5}>
-          {tasks.map((task) => (
-            <TaskItem
-              simultaneousHandlers={scrollRef}
-              onDismiss={removeTask}
-              key={task.index}
-              task={task}
-            />
-          ))}
-        </VStack>
+        <MotiView
+          from={{
+            opacity: 0,
+            scale: 0.5,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          transition={{
+            type: 'timing',
+            duration: 500,
+          }}
+        >
+          <VStack space={5}>
+            {tasks.map((task) => (
+              <TaskItem
+                simultaneousHandlers={scrollRef}
+                onDismiss={removeTask}
+                key={task.index}
+                task={task}
+              />
+            ))}
+          </VStack>
+        </MotiView>
       </ScrollView>
+      <Fab
+        onPress={() => setShowModal(true)}
+        mb={4}
+        mr={4}
+        w={60}
+        h={60}
+        size="lg"
+        icon={<Icon color="white" as={<Feather name="plus" />} size="sm" />}
+      />
+      <AddTaskModal isOpen={showModal} closeModal={closeModal} />
     </SafeAreaView>
   )
 }
