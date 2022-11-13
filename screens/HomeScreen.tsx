@@ -11,8 +11,7 @@ import {
   themeTools,
   useColorModeValue,
   Fab,
-  FlatList,
-  Card,
+  Icon,
 } from 'native-base'
 import {
   SafeAreaView,
@@ -21,11 +20,13 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import Theme from '../Theme'
-import ThemeToggle from '../components/ThemeToggle'
 import { TaskItemInterface } from './TaskList'
+import Feather from 'react-native-vector-icons/Feather'
+import AddTasksListModal from '../components/AddTasksListModal'
+import Realm from 'realm'
 
 const list = [
   {
@@ -38,13 +39,24 @@ const list = [
   },
   {
     id: 3,
-    title: 'Kid',
+    title: 'Fuck, go back',
   },
 ]
 
 const windowHeight = Dimensions.get('window').height
 
 const HomeScreen = () => {
+  const TaskListSchema = {
+    name: 'TaskList',
+    properties: {
+      _id: 'int',
+      name: 'string',
+    },
+    primaryKey: '_id',
+  }
+
+  const [showModal, setShowModal] = useState(false)
+
   const navigation = useNavigation()
 
   const ifyColor = themeTools.getColor(
@@ -56,6 +68,20 @@ const HomeScreen = () => {
     Theme,
     useColorModeValue('darkText', 'whiteText'),
   )
+
+  useEffect(() => {
+    const showTaskLists = async () => {
+      const realm = await Realm.open({
+        path: 'myrealm',
+        schema: [TaskListSchema],
+      })
+
+      const tasks = realm.objects('TaskList')
+      console.log(`The lists of tasks are: ${tasks.map((task) => task.name)}`)
+    }
+
+    showTaskLists()
+  }, [])
 
   return (
     <SafeAreaView
@@ -98,6 +124,19 @@ const HomeScreen = () => {
           </Pressable>
         ))}
       </VStack>
+      <Fab
+        onPress={() => setShowModal(true)}
+        mb={4}
+        mr={4}
+        w={60}
+        h={60}
+        size="lg"
+        icon={<Icon color="white" as={<Feather name="plus" />} size="sm" />}
+      />
+      <AddTasksListModal
+        isOpen={showModal}
+        closeModal={() => setShowModal(!showModal)}
+      />
     </SafeAreaView>
   )
 }
