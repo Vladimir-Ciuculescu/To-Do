@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import Realm from 'realm'
 import EvilIcons from 'react-native-vector-icons/EvilIcons'
+import { TaskSchema, TaskListSchema } from '../schemas/schemas'
 
 interface AddTaskModalProps {
   isOpen: boolean
@@ -19,40 +20,35 @@ interface AddTaskModalProps {
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, closeModal }) => {
   const [value, setValue] = useState('')
 
-  const TaskSchema = {
-    name: 'Task',
-    properties: {
-      _id: 'int',
-      name: 'string',
-      status: 'string?',
-    },
-    primaryKey: '_id',
-  }
+  // const AddTask = async () => {
+  //   const realm = await Realm.open({
+  //     path: 'myrealm',
+  //     schema: [TaskSchema, TaskListSchema],
+  //   })
 
-  const AddTask = async () => {
-    const realm = await Realm.open({ path: 'myrealm', schema: [TaskSchema] })
-
-    let task1, task2
-    realm.write(() => {
-      task1 = realm.create('Task', {
-        _id: 1,
-        name: 'go grocery shopping',
-        status: 'Open',
-      })
-      task2 = realm.create('Task', {
-        _id: 2,
-        name: 'go exercise',
-        status: 'Open',
-      })
-      console.log(`created two tasks: ${task1.name} & ${task2.name}`)
-    })
-  }
+  //   let task1, task2
+  //   realm.write(() => {
+  //     task1 = realm.create('Task', {
+  //       _id: 1,
+  //       name: 'go grocery shopping',
+  //       status: 'Open',
+  //     })
+  //     task2 = realm.create('Task', {
+  //       _id: 2,
+  //       name: 'go exercise',
+  //       status: 'Open',
+  //     })
+  //     console.log(`created two tasks: ${task1.name} & ${task2.name}`)
+  //   })
+  // }
 
   const ShowTasks = async () => {
-    const realm = await Realm.open({ path: 'myrealm', schema: [TaskSchema] })
-
-    const tasks = realm.objects('Task')
-    console.log(`The lists of tasks are: ${tasks.map((task) => task.name)}`)
+    // const realm = await Realm.open({
+    //   path: 'myrealm',
+    //   schema: [TaskSchema, TaskListSchema],
+    // })
+    // const tasks = realm.objects('Task')
+    // console.log(`The lists of tasks are: ${tasks.map((task) => task.name)}`)
   }
 
   return (

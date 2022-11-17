@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   KeyboardAvoidingView,
   Modal,
@@ -18,9 +18,11 @@ import {
 } from 'native-base'
 import EvilIcons from 'react-native-vector-icons/EvilIcons'
 import ColorBox from './ColorBox'
-import { lightColorsList } from '../consts/colorsListTypes'
+import { colorsList } from '../consts/colorsListTypes'
 import useColor from '../hooks/useColor'
 import Realm from 'realm'
+import { v4 as uuidv4 } from 'uuid'
+import { TaskListSchema, TaskSchema } from '../schemas/schemas'
 
 interface AddTasksListModalProps {
   isOpen: boolean
@@ -31,48 +33,53 @@ const AddTasksListModal: React.FC<AddTasksListModalProps> = ({
   isOpen,
   closeModal,
 }) => {
-  const TaskListSchema = {
-    name: 'TaskList',
-    properties: {
-      _id: 'int',
-      name: 'string',
-    },
-    primaryKey: '_id',
-  }
-
   const [selectedColorId, setSelectedColorId] = useState<number>(1)
   const [input, setInput] = useState<string>('')
 
+  const { UUID } = Realm.BSON
+
   const selectedColor = useColor(
-    lightColorsList[selectedColorId - 1].lightColor,
-    lightColorsList[selectedColorId - 1].darkColor,
+    colorsList[selectedColorId - 1].lightColor,
+    colorsList[selectedColorId - 1].darkColor,
   )
 
   const onSelectColor = (id: number) => {
     setSelectedColorId(id)
   }
 
+  const resetModal = () => {
+    closeModal()
+    setInput('')
+  }
+
   const AddTaskList = async () => {
     const realm = await Realm.open({
       path: 'myrealm',
-      schema: [TaskListSchema],
+      schema: [TaskSchema, TaskListSchema],
     })
 
     let taskList
 
     realm.write(() => {
       taskList = realm.create('TaskList', {
-        _id: 1,
+        _id: new UUID(),
         name: input,
+        lightColor: colorsList[selectedColorId - 1].lightColor,
+        darkColor: colorsList[selectedColorId - 1].darkColor,
       })
     })
+
+    //realm.close()
+
+    setInput('')
+    closeModal()
   }
 
   return (
     <Modal animationType="slide" visible={isOpen}>
       <KeyboardAvoidingView style={stlyes.container}>
         <Box position={'absolute'} top="8%" right="10%">
-          <Pressable onPress={closeModal}>
+          <Pressable onPress={resetModal}>
             <EvilIcons name="close" size={40} />
           </Pressable>
         </Box>
@@ -88,9 +95,15 @@ const AddTasksListModal: React.FC<AddTasksListModalProps> = ({
               variant="outline"
               w="90%"
               size="2xl"
+              _light={{
+                _hover: {
+                  bg: 'red.100',
+                },
+              }}
             />
+
             <HStack space={4} alignSelf="center" mt={3} mb={5}>
-              {lightColorsList.map((color: any) => (
+              {colorsList.map((color: any) => (
                 <ColorBox
                   id={color.id}
                   onSelectColor={onSelectColor}

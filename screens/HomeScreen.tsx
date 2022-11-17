@@ -27,34 +27,14 @@ import { TaskItemInterface } from './TaskList'
 import Feather from 'react-native-vector-icons/Feather'
 import AddTasksListModal from '../components/AddTasksListModal'
 import Realm from 'realm'
-
-const list = [
-  {
-    id: 1,
-    title: 'Gym',
-  },
-  {
-    id: 2,
-    title: 'Groceries',
-  },
-  {
-    id: 3,
-    title: 'Fuck, go back',
-  },
-]
+import { TaskListSchema, TaskSchema } from '../schemas/schemas'
+import useColor from '../hooks/useColor'
+import ThemeToggle from '../components/ThemeToggle'
 
 const windowHeight = Dimensions.get('window').height
 
 const HomeScreen = () => {
-  const TaskListSchema = {
-    name: 'TaskList',
-    properties: {
-      _id: 'int',
-      name: 'string',
-    },
-    primaryKey: '_id',
-  }
-
+  const [taskLists, setTaskLists] = useState([])
   const [showModal, setShowModal] = useState(false)
 
   const navigation = useNavigation()
@@ -73,15 +53,27 @@ const HomeScreen = () => {
     const showTaskLists = async () => {
       const realm = await Realm.open({
         path: 'myrealm',
-        schema: [TaskListSchema],
+        schema: [TaskSchema, TaskListSchema],
       })
 
       const tasks = realm.objects('TaskList')
-      console.log(`The lists of tasks are: ${tasks.map((task) => task.name)}`)
+
+      console.log(tasks)
+
+      // realm.write(() => {
+      //   tasks.map((item) => {
+      //     realm.delete(item)
+      //   })
+      // })
+      setTaskLists(tasks)
+
+      //realm.close()
     }
 
     showTaskLists()
   }, [])
+
+  const BackGroundTaskList = (a: 'string', b: 'string') => useColor(a, b)
 
   return (
     <SafeAreaView
@@ -106,20 +98,20 @@ const HomeScreen = () => {
         <Divider color="red" />
       </HStack>
       <VStack space={2} width="85%" top={9}>
-        {list.map((item) => (
+        {taskLists.map((item) => (
           <Pressable onPress={() => navigation.navigate('TaskList')}>
             <Box
               rounded="xl"
               width="100%"
-              bg="primary.300"
               p="4"
+              bg={BackGroundTaskList(item.lightColor, item.darkColor)}
               shadow={9}
               _text={{
                 fontSize: 'md',
                 fontWeight: 'bold',
               }}
             >
-              {item.title}
+              {item.name}
             </Box>
           </Pressable>
         ))}
