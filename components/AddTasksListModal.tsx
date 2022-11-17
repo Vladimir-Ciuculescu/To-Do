@@ -15,13 +15,14 @@ import {
   Text,
   HStack,
   Button,
+  FormControl,
 } from 'native-base'
 import EvilIcons from 'react-native-vector-icons/EvilIcons'
+import Entypo from 'react-native-vector-icons/Entypo'
 import ColorBox from './ColorBox'
 import { colorsList } from '../consts/colorsListTypes'
 import useColor from '../hooks/useColor'
 import Realm from 'realm'
-import { v4 as uuidv4 } from 'uuid'
 import { TaskListSchema, TaskSchema } from '../schemas/schemas'
 
 interface AddTasksListModalProps {
@@ -35,6 +36,7 @@ const AddTasksListModal: React.FC<AddTasksListModalProps> = ({
 }) => {
   const [selectedColorId, setSelectedColorId] = useState<number>(1)
   const [input, setInput] = useState<string>('')
+  const [isInvalid, setIsInvalid] = useState<boolean>(false)
 
   const { UUID } = Realm.BSON
 
@@ -53,27 +55,36 @@ const AddTasksListModal: React.FC<AddTasksListModalProps> = ({
   }
 
   const AddTaskList = async () => {
-    const realm = await Realm.open({
-      path: 'myrealm',
-      schema: [TaskSchema, TaskListSchema],
-    })
-
-    let taskList
-
-    realm.write(() => {
-      taskList = realm.create('TaskList', {
-        _id: new UUID(),
-        name: input,
-        lightColor: colorsList[selectedColorId - 1].lightColor,
-        darkColor: colorsList[selectedColorId - 1].darkColor,
+    if (input === '') {
+      setIsInvalid(true)
+    } else {
+      const realm = await Realm.open({
+        path: 'myrealm',
+        schema: [TaskSchema, TaskListSchema],
       })
-    })
 
-    //realm.close()
+      let taskList
 
-    setInput('')
-    closeModal()
+      realm.write(() => {
+        taskList = realm.create('TaskList', {
+          _id: new UUID(),
+          name: input,
+          lightColor: colorsList[selectedColorId - 1].lightColor,
+          darkColor: colorsList[selectedColorId - 1].darkColor,
+        })
+      })
+
+      realm.close()
+
+      resetModal()
+    }
   }
+
+  useEffect(() => {
+    if (input !== '') {
+      setIsInvalid(false)
+    }
+  }, [input])
 
   return (
     <Modal animationType="slide" visible={isOpen}>
@@ -89,18 +100,28 @@ const AddTasksListModal: React.FC<AddTasksListModalProps> = ({
               Create a new Task list
             </Text>
 
-            <Input
-              value={input}
-              onChangeText={(e) => setInput(e)}
-              variant="outline"
-              w="90%"
-              size="2xl"
-              _light={{
-                _hover: {
-                  bg: 'red.100',
-                },
-              }}
-            />
+            <Box alignItems="center" w="90%" alignSelf="center">
+              <FormControl isInvalid={isInvalid}>
+                <Input
+                  value={input}
+                  onChangeText={(e) => setInput(e)}
+                  variant="outline"
+                  w="90%"
+                  size="2xl"
+                  _light={{
+                    borderColor: selectedColor,
+                    _focus: {
+                      borderColor: selectedColor,
+                    },
+                  }}
+                />
+                <FormControl.ErrorMessage
+                  leftIcon={<Entypo name="warning" size={18} />}
+                >
+                  The name for task list cannot be empty
+                </FormControl.ErrorMessage>
+              </FormControl>
+            </Box>
 
             <HStack space={4} alignSelf="center" mt={3} mb={5}>
               {colorsList.map((color: any) => (

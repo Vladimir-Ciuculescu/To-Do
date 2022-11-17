@@ -1,20 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Text, VStack, Fab, Box, Icon } from 'native-base'
-import { StyleSheet, SafeAreaView, StatusBar, View } from 'react-native'
+import { Text, VStack, Fab, Box, Icon, Divider, HStack } from 'native-base'
+import {
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  View,
+  TouchableOpacity,
+} from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import TaskItem from '../components/TaskItem'
 import Feather from 'react-native-vector-icons/Feather'
+import Entypo from 'react-native-vector-icons/Entypo'
 import AddTaskModal from '../components/AddTaskModal'
 import { useNavigation } from '@react-navigation/native'
 import { makeStyledComponent } from '../utils/Styled'
-import { AnimatePresence, MotiView } from 'moti'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import useColor from '../hooks/useColor'
 
 export interface TaskItemInterface {
   index: number
   title: string
 }
 
-const TaskList: React.FC<any> = () => {
+type RootStackParamList = {
+  Home: undefined
+  Profile: { userId: string }
+  Feed: { sort: 'latest' | 'top' } | undefined
+}
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Profile', 'MyStack'>
+
+const TaskList: React.FC<Props> = ({ route, navigation: navigationProps }) => {
   const TITLES = [
     'Do groceries',
     'Go to the gym',
@@ -48,36 +64,60 @@ const TaskList: React.FC<any> = () => {
     setShowModal(false)
   }
 
+  const taskColor = useColor(route.params.lightColor, route.params.darkColor)
+
+  useEffect(() => {
+    navigationProps.setOptions({
+      title: route.params.listName,
+      headerBackTitleVisible: false,
+      headerTitleAlign: 'left',
+      header: () => (
+        <SafeAreaView>
+          <VStack>
+            <HStack alignItems="center">
+              <TouchableOpacity onPress={() => navigationProps.goBack()}>
+                <Entypo
+                  color={taskColor}
+                  style={{ marginLeft: 10 }}
+                  name="arrow-long-left"
+                  size={30}
+                />
+              </TouchableOpacity>
+              <VStack left={5}>
+                <Text color={taskColor} fontSize={30} fontWeight="bold">
+                  {route.params.listName}
+                </Text>
+                <Text color={taskColor}>2 of 4 completed</Text>
+              </VStack>
+            </HStack>
+            <Divider
+              marginTop={2}
+              w="95%"
+              bg={taskColor}
+              thickness="3"
+              alignSelf={'center'}
+            />
+          </VStack>
+        </SafeAreaView>
+      ),
+    })
+  }, [navigationProps])
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={'default'} />
 
-      <ScrollView ref={scrollRef}>
-        <MotiView
-          from={{
-            opacity: 0,
-            scale: 0.5,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-          }}
-          transition={{
-            type: 'timing',
-            duration: 500,
-          }}
-        >
-          <VStack space={5}>
-            {tasks.map((task) => (
-              <TaskItem
-                simultaneousHandlers={scrollRef}
-                onDismiss={removeTask}
-                key={task.index}
-                task={task}
-              />
-            ))}
-          </VStack>
-        </MotiView>
+      <ScrollView ref={scrollRef} style={{ marginTop: 20 }}>
+        <VStack space={5}>
+          {tasks.map((task) => (
+            <TaskItem
+              simultaneousHandlers={scrollRef}
+              onDismiss={removeTask}
+              key={task.index}
+              task={task}
+            />
+          ))}
+        </VStack>
       </ScrollView>
       <Fab
         onPress={() => setShowModal(true)}

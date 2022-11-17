@@ -7,6 +7,10 @@ import AddTaskModal from './components/AddTaskModal'
 
 const RootStack = createStackNavigator()
 
+const taskListOptions = {
+  headerStyle: { height: 116, backgroundColor: '#f3f3f2' },
+}
+
 const Navigation = () => {
   return (
     <NavigationContainer independent>
@@ -14,7 +18,7 @@ const Navigation = () => {
         <RootStack.Group screenOptions={{ headerShown: false }}>
           <RootStack.Screen name="HomeScreen" component={HomeScreen} />
         </RootStack.Group>
-        <RootStack.Group>
+        <RootStack.Group screenOptions={taskListOptions}>
           <RootStack.Screen name="TaskList" component={TaskList} />
         </RootStack.Group>
       </RootStack.Navigator>

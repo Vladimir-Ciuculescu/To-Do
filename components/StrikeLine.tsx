@@ -8,6 +8,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated'
+import useColor from '../hooks/useColor'
 import theme from '../Theme'
 
 interface StrikeLineInterface {
@@ -20,15 +21,9 @@ const StrikeLine: React.FC<StrikeLineInterface> = ({ striked }) => {
   const strikeLineWidth = useSharedValue(0)
   const strikeLineColor = useSharedValue(0)
 
-  const activeTextColor = themeTools.getColor(
-    theme,
-    useColorModeValue('darkText', 'lightText'),
-  )
+  const activeTextColor = useColor('darkText', 'lightText')
 
-  const doneTextColor = themeTools.getColor(
-    theme,
-    useColorModeValue('muted.400', 'muted.600'),
-  )
+  const doneTextColor = useColor('muted.400', 'muted.600')
 
   const strikeLineAnimatedStlye = useAnimatedStyle(() => ({
     width: `${strikeLineWidth.value * 100}%`,

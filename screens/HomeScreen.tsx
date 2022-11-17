@@ -30,6 +30,7 @@ import Realm from 'realm'
 import { TaskListSchema, TaskSchema } from '../schemas/schemas'
 import useColor from '../hooks/useColor'
 import ThemeToggle from '../components/ThemeToggle'
+import AddTaskModal from '../components/AddTaskModal'
 
 const windowHeight = Dimensions.get('window').height
 
@@ -73,7 +74,9 @@ const HomeScreen = () => {
     showTaskLists()
   }, [])
 
-  const BackGroundTaskList = (a: 'string', b: 'string') => useColor(a, b)
+  const openTaskItemModal = () => {}
+
+  const BackGroundTaskList = (a: string, b: string) => useColor(a, b)
 
   return (
     <SafeAreaView
@@ -99,7 +102,15 @@ const HomeScreen = () => {
       </HStack>
       <VStack space={2} width="85%" top={9}>
         {taskLists.map((item) => (
-          <Pressable onPress={() => navigation.navigate('TaskList')}>
+          <Pressable
+            onPress={() =>
+              navigation.navigate('TaskList', {
+                listName: item.name,
+                lightColor: item.lightColor,
+                darkColor: item.darkColor,
+              })
+            }
+          >
             <Box
               rounded="xl"
               width="100%"
